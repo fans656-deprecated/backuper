@@ -1,7 +1,7 @@
 # coding: utf-8
-# TODO: 解决扫描大量文件时GUI假死现象
-# 比如扫描 D:/Books
-# 猜测原因是太多 message 被塞进GUI的event loop
+import Queue
+import time
+
 from PySide.QtGui import *
 from PySide.QtCore import *
 
@@ -12,9 +12,6 @@ class Widget(QDialog):
     def __init__(self, parent=None):
         super(Widget, self).__init__(parent)
         self.setWindowTitle('File Scanner')
-
-        self.scannerThread = Scanner()
-        self.scannerThread.fileScanned.connect(self.onFileScanned)
 
         self.scanningList = QTextEdit()
         self.dirEdit = QLineEdit()
@@ -41,7 +38,14 @@ class Widget(QDialog):
 
         self.setLayout(lt)
 
-        self.openDir(QDir().canonicalPath())
+        self.idleTimer = QTimer()
+        self.idleTimer.setInterval(0)
+        self.idleTimer.timeout.connect(self.onIdle)
+
+        self.openDir(QDir('D:/Books').canonicalPath())
+
+        self.idleI = 0
+        self.totFiles = 0
 
     def openDir(self, path=None):
         if path is None:
@@ -55,19 +59,30 @@ class Widget(QDialog):
     def scanDir(self):
         self.scanningList.clear()
         path = self.dirEdit.text()
-        self.scannerThread.path = path
-        self.scannerThread.start()
 
-    def onFileScanned(self, path):
-        self.scanningList.append(path)
+        self.scanner = Scanner(path)
+        self.fpathsQueue = self.scanner.queue
 
-    # override `done` rather than `closeEvent`
-    # because otherwise the escape key press will not
-    # trigger the `closeEvent`
-    def done(self, r):
-        if self.scannerThread.isRunning():
-            self.scannerThread.terminate()
-        super(Widget, self).done(r)
+        self.idleTimer.start()
+        self.scanner.start()
+
+        self.beg = time.time()
+
+    def onIdle(self):
+        try:
+            for _ in xrange(10):
+                fpath = self.fpathsQueue.get(False)
+                if fpath is None:
+                    self.idleTimer.stop()
+                    elapsed = time.time() - self.beg
+                    s = 'scan finished. {} files in {} onIdle, in {:.1f}s'.format(self.totFiles, self.idleI, elapsed)
+                    QMessageBox.information(self, 'Result', s)
+                    break
+                self.scanningList.append(fpath)
+                self.totFiles += 1
+        except Queue.Empty:
+            pass
+        self.idleI += 1
 
 app = QApplication([])
 w = Widget()

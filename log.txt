@@ -302,3 +302,19 @@ QThread 有两种用法
 之前的commit里搞进了几个几十MB的pickle文件，SO了会儿尝试解决但只是mess up了
 算了新开一个，从这里initial commit
 以后吸取教训就好了
+
+2015-04-23 13:17:13
+QTimer 当 interval 为 0 时的效果就是，event loop 里没有消息就emit TimeOut
+相当于idle processing
+
+那么现在的逻辑就是，点击scan后，启动一个interval为0的timer来做idle processing
+thread用python的，往queue里放path，，GUI线程里idle时去取出已有的paths显示
+
+2015-04-23 13:24:32
+呃，python的thread "can only be started once"
+
+2015-04-23 13:44:17
+因为os.walk速度很快，所以idle里从queue取path一次要限制数量，否则GUI又会block在onIdle函数中
+
+测试了一下，onIdle每次最多放10个，os.walk Books里的一万多文件，需要一千多次onIdle，11.3秒
+每次处理100个可以降到9.3秒，但是GUI就会开始有些卡

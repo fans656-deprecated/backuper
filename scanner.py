@@ -1,14 +1,19 @@
-import time
 import os
+import threading
+import Queue
 
-from PySide.QtCore import *
+class Scanner(threading.Thread):
 
-class Scanner(QThread):
-
-    fileScanned = Signal(unicode)
+    def __init__(self, path, start=False):
+        super(Scanner, self).__init__()
+        self.path = path
+        self.queue = Queue.Queue()
+        if start:
+            self.start()
 
     def run(self):
         for dirpath, dirnames, filenames in os.walk(self.path):
             for filename in filenames:
                 fpath = os.path.join(dirpath, filename)
-                self.fileScanned.emit(fpath)
+                self.queue.put(fpath)
+        self.queue.put(None)
