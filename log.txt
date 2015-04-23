@@ -1,0 +1,304 @@
+2015-02-05 08:18:20
+http://stackoverflow.com/questions/6675556/get-each-partition-information-with-python
+用WMI获取分区信息
+
+https://msdn.microsoft.com/en-us/library/windows/desktop/aa394132(v=vs.85).aspx
+Win32_DiskDrive
+
+import wmi
+c = wmi.WMI()
+貌似直接用 c.Win32_LogicalDisk() 就能得到所有分区(C,D,E这种)
+
+https://msdn.microsoft.com/en-us/library/aa394173(v=vs.85).aspx
+Win32_LogicalDisk
+
+https://msdn.microsoft.com/en-us/library/aa384642(v=vs.85).aspx
+这里是WMI的introduction
+
+https://msdn.microsoft.com/en-us/library/aa392902(v=vs.85).aspx
+WQL - WMI Query Language
+
+volumes = [ld.DeviceId for ld in c.Win32_LogicalDisk()]
+得到所有的 ['C:', 'D:', 'E:', 'G:']
+
+做一个输入 'C:' 这种来切换卷的命令行
+
+python的 input() 原来是 eval(raw_input())
+
+2015-02-05 09:53:34
+我靠，写命令好烦啊，不写了，直奔功能去
+
+2015-02-05 12:48:20
+os.listdir() 好像会cache结果，，记得之前 quick-console 里加 rand av 功能的时候就有感觉，第一次列所有文件会比较慢，但之后会变快
+上午写这里的 list 也是，第一次需要几秒的之后只需要几百毫秒
+下了 python 的源码来看
+Modules/posixmodule.c
+
+有预感这种cache可能是操作系统做的
+
+2015-02-05 13:31:49
+https://mail.python.org/pipermail/python-dev/2014-June/135215.html
+这里有人提出 os.scandir() 来加快 os.listdir() 和 os.walk()
+有github的项目，但还没有加入python standard lib
+
+http://stackoverflow.com/questions/11975768/is-there-anyway-to-do-an-asynchronous-findnextfile
+问题里的 Side note 说到 “once the infomation has been cached by Windows FindNextFile doesn't appear to have this issude..(slow on each query)”
+证明windows确实会cache对文件属性的访问
+
+http://blogs.msdn.com/b/oldnewthing/archive/2006/04/07/570801.aspx
+这里说的问题虽然与我们无关，但挺有趣
+是有关batch queries的
+假设我们做的是远程调用
+    t = f1();
+    t = f2(t);
+    t = f3(t);
+f2 要等 f1 完成，1个 round trip， f3 要等 f1 完成，又一个 round trip
+每次调用从开始到完成都需要一个 round trip
+假设 rtt 是10秒，函数执行时间忽略不计，那么这段代码跑下来需要30秒，但是如果我们把整段代码发过去，那么跑完只需10秒
+正如文章标题所说：computing over a high-latency network means you have to bulk up
+
+==，好像不是全然没有关系，文章里说： “the FindNextFile does its own internal batching to avoid this problem when doing traditional file enumeration”
+
+http://stackoverflow.com/questions/24100883/does-findfirstfile-findnextfile-api-pair-cache-results-returned
+http://en.wikipedia.org/wiki/Time_of_check_to_time_of_use
+操作过程中文件夹结构可能变化，擦，这叫 TOCTOU
+
+功能一要往完善了做就变得好复杂
+
+http://stackoverflow.com/a/24110635/3881776
+这里说 FindNextFile 内部不做cache(对于本地操作来说)，但是函数调用结束后操作系统会cache一部分信息，但这可能只是实现细节——所以不能依赖这种行为，，所以还是有必要自己写cache
+
+https://msdn.microsoft.com/en-us/library/windows/desktop/aa364218(v=vs.85).aspx
+按照这里的说法，我怀疑这种cache只是普通的 disk - memory cache
+也就是说并非针对文件信息，而是任何磁盘读写都会被cache
+
+一种检测方法是重启电脑，，另一种可能是大量读取文件，把cache中原本的内容给挤出去
+
+2015-02-05 16:42:07
+http://stackoverflow.com/questions/28339263/is-os-walk-much-faster-after-the-first-run-due-to-page-caching/28339349#28339349
+SO上问了一下，很快有回答，，而且竟然还是上次那个问题里回答我的人
+
+2015-02-05 17:15:27
+http://en.wikipedia.org/wiki/Disk_cache
+我艹...水好深... 第三个是综合讲 cache 的
+
+2015-02-05 17:45:33
+page 是针对内存讲的，page 的定义就是一定长度的virtual memory，可以存在于物理内存中，也可以存在于硬盘中，，如果正在硬盘中的时候被访问，那就是page fault，就要换入，，换入的时候就_可能_有其他页面被换出，，内存分配以页面为最小单位
+
+disk cache 中的单位也叫 page，这里才涉及 dirty page (需要写回硬盘)什么的
+
+http://en.wikipedia.org/wiki/NTFS
+磁盘管理也是一大块啊，，操作系统简直是个庞然大物...(不过三浪漫里头图形学也忒大，是个领域了几乎，，感觉就编原算是内容最少的了)
+
+2015-02-05 18:51:35
+http://superuser.com/a/273131/415836
+这里有几个比 FindFirst/Next 更快的方法
+
+http://stackoverflow.com/questions/748675/finding-duplicate-files-and-removing-them
+http://www.endlesslycurious.com/2011/06/01/finding-duplicate-files-using-python/
+http://www.pythoncentral.io/finding-duplicate-files-with-python/
+这里用各种hash来查找重复文件
+
+2015-02-06 21:01:56
+http://stackoverflow.com/questions/748675/finding-duplicate-files-and-removing-them
+照着这里开始学，，先看看 hashlib
+
+http://stackoverflow.com/questions/10434326/hash-collision-in-git
+git 用的是 SHA-1，，SO的那个例子里也是，，那么咱也跟着用吧
+
+恩...打算写一个图形界面的文件选择器——选了之后按要求输出它的hash
+
+2015-02-06 21:44:35
+http://doc.qt.io/qt-5/qfilesystemmodel.html#details
+qt 有自己的 QFileSystemModel，但是要用完善这个还得爬爬MVC
+暂时不需要那么复杂，我就只用 os.listdir 和 QListView 好了
+
+还是用 QFileSystemModel 了，挺方便
+
+2015-02-06 22:34:52
+http://stackoverflow.com/questions/5242161/how-to-select-a-file-in-qtreeview-for-a-qfilesystemmodel-by-path
+初始就选中一个文件
+
+2015-02-21 10:23:31
+目标：
+添加多个目录，，对这些目录树里的文件进行hash，找出duplicate的文件
+
+2015-02-21 10:47:44
+1024字节的hash无法保证能检测出重复，刚测试了一下，qq聊天记录图片里会把两个不同的图片识别为相同
+另外，好像处理速度也不是很慢
+
+那么，现在需要对1024字节hash出collision的文件们深度hash(有个办法是增量hash，hashlib中数次update之后可以digest，每次digest后检测一次是否仍然相同)
+
+2015-02-21 11:34:08
+准备写一个计时，看一个G盘全部hash完大约要多久
+
+2015-02-21 12:48:57
+速度大致如下：
+    72048 files,   275.13 GB,   225.64 s |   319 files/s,  1248.59 MB/s
+    72049 files,   276.55 GB,   225.64 s |   319 files/s,  1255.04 MB/s
+    72050 files,   276.55 GB,   225.64 s |   319 files/s,  1255.02 MB/s
+    72051 files,   278.32 GB,   225.64 s |   319 files/s,  1263.06 MB/s
+这个没跑完，而且统计信息跟文件大小也有关系(小文件会比较费时)
+不过按移动硬盘900多G，28万左右文件来算，差不多15分钟能扫描一次
+如果加上日志记录来避免重复扫描，速度应该不成问题
+
+刚才跑断了是因为碰到WindowsError 123 ，文件名的原因，波多姐姐文件夹下的一个日文URL链接
+去看看怎么回事
+
+F:\fans656\Movie\AV\yoo\bodo\20130210\グラビアやるつもりが無修正まで行っちゃったAV女優・波多野結衣 - お宝エログ幕府.url
+这个文件，“波多野结衣”前面那个字符非法，在explorer中看是一个类似英文名中间的点
+
+http://unicodelookup.com/#・/1
+这个字符叫做：katakana middle dot，code point 是 0x30fb
+(katakana 即 片假名)
+
+问题大约出在os.walk里，它给出的fname就已经无法表示该字符
+研究研究怎么弄
+
+2015-02-21 13:41:13
+唔..貌似从FindNextFile这种windows api返回的就是非法字符
+等等，不对，，返回的是0x30fb
+那么我得看看python listdir返回的是什么东西了
+
+python返回的字符串是“?.txt”，其中的问号好像真的是个问号(ascii 63)，而不是0x30fb
+那么似乎是把c的wchar_t字符串转换为python unicode时动了手脚？
+
+哎呀，成功了：os.listdir(u'..') 就可以让它返回正确的unicode字符串
+
+2015-02-21 15:07:51
+http://stackoverflow.com/questions/6624453/whats-the-correct-way-to-convert-bytes-to-a-hex-string-in-python-3
+convert bytes to hex string
+
+2015-02-21 15:12:03
+测试一下怎样读一个文件最快
+
+800MB的文件，每次读取512字节全部读完需要9秒，4096字节只要2秒，32KB需要0.5秒
+再加上hash测试一下
+
+分别是：512B - 6.3s, 4KB - 3.2s, 32KB - 2.4s
+
+2015-02-21 22:12:42
+扫描一遍(os.stat)E盘需要32秒，5万多文件，289GB
+一次cache后可以缩短到14s
+以上是带print的，不带的话cache后3秒即可
+
+现在试下移动硬盘，然后试下hash 1KB能找到多少个valid duplicates
+
+    287685 files,  15362 folders.  919 GB (986948780383 bytes)
+    Elapsed: 156 s
+
+cache之后15s
+
+
+1KB hash：
+    287685 files,  15362 folders.  919 GB (986948780383 bytes)
+    Elapsed: 717 s
+结果pickle下来了，去研究研究
+
+2015-02-21 23:10:49
+全文件hash会很慢，特别是将来的应用场景中会遇到不少视频文件，，所以需要其他策略
+比如大文件通过随机hash一些数据块 + 文件名部分匹配等来判重
+
+1kb hash 有2万5千个左右 potential duplicates，已经知道其中有很多 false duplicates，比如本来拉拉的几张照片完全不一样的但前1KB hash会collide
+
+2015-02-22 09:53:20
+昨晚进行了一些尝试：
+1. 扫描移动硬盘文件，对每一个生成前1KB hash
+2. 根据hash结果滤出潜在重复文件
+3. 进行全文件hash (但是速度很慢，没有成功)
+
+今儿准备重新走一遍，基本思想是根据各种标准来渐进地细分潜在分组
+开始时根据文件大小，然后用越来越多的数据块hash
+总的效果是开始时所有文件分成几个大的集合，每一次处理只保留那些成员数大于1的集合，最后(比如全文件hash结束后)剩下的那些就认为是重复文件
+
+这算是一个对集合不断拆分的过程，记得当时看并查集的wiki时有个类似的数据结构是干这个的，去瞅瞅
+
+看了一下，叫 partition refinement，好像不太适用
+
+2015-04-21 17:33:15
+重新开写，先做一个GUI展示文件扫描的效果，，如果可能的话，加上进度条
+进度条可以这么实现：先获取磁盘使用量，然后扫描过程中累加读到的文件大小，相除得到进度
+
+2015-04-21 17:54:32
+QFileDialog::getExistingDirectory() 可以选择分区(C: D: 这种)
+GUI写好了，下来要做扫描功能
+放到一个subprocess里头(thread的话python是GIL的)
+要不先用thread实现一次？
+
+2015-04-21 18:15:14
+看了下python的GIL(Global Intepreter Lock)只对pure python code (bytecode)起作用，也就是说，如果一个线程跑进了IO或是C代码里，则并不阻止另一个线程运行python代码
+
+想着用个什么办法演示一下
+
+2015-04-21 18:37:42
+写了两个函数，一个while一段时间，一个time.sleep一段相同的时间
+开两个线程，第一次都跑while，第二次都跑sleep
+结果是while用时比sleep的两倍还多，可以表明正是因为GIL(两倍还多出的那部分是实验误差?)
+
+所以，io bound的线程们不用怕GIL
+
+
+可是... python的thread怎么跟qt的message queue互动起来?
+
+2015-04-21 18:48:40
+http://stackoverflow.com/questions/2157208/python-gil-and-globals
+这里问可不可以借助GIL而省掉线程共享变量的lock
+答案是不可以，GIL只保证几个线程的bytecode instruction不会同时执行，而python语句并不一定只包含一个bytecode instruction
+
+2015-04-21 18:53:38
+在看python的multiprocessing模块
+恩，忽然想到如果之后做扫描的话，多核能不能加快速度？
+做hash的话肯定是可以，，所以最后应该是要用的
+
+multiprocessing.cpu_count() 给出核心数，也就是自己能最大化收益的线程/进程数
+
+2015-04-21 19:51:32
+http://bryceboe.com/2011/01/28/the-python-multiprocessing-queue-and-large-objects/
+这里提到multiprocessing.Queue的实现有些问题，大物体有时会来不及放，然后另一端的get会raise QueueEmpty
+
+2015-04-21 20:05:00
+https://bugs.python.org/issue8426
+这里提到另一个关于queue的问题
+进程间通过PIPE通信，如果sender持续put大量数据而getter不做get的话，就会因为PIPE的buffer大小限制而deadlock (这里说的是linux的，而且好像跟代码逻辑有关系)
+
+恩..这里的问题是
+sender执行put时，并不能瞬时完成，它是开启一个线程feeder，然后由feeder来把要put的数据(放在一个buffer里)一点一点塞进pipe中
+而linux下的pipe不能无限存放数据(就像一个房间，如果另一边不往出拿，这边放慢就没法再放了)
+如果getter不取数据或取得不够导致pipe被塞满，sender就会等待feeder线程完成塞的动作，而feeder不能塞了... (这里不是很明白了..关于getter那边的行为)
+
+呃，是说join会首先等待feeder完成，而如果getter那边没取出足够的数据(足以使pipe留出足够的空间来让feeder塞完手头的数据)，putter就会hang在join那里，即使getter进程已经结束
+
+2015-04-21 22:46:57
+http://doc.qt.io/qt-5/qthread.html#details
+QThread 有两种用法
+一种是单独的worker object，可以把它们moveToThread，然后它们接到消息后的执行就发生在另一个thread里——注意这里的thread是有event loop的
+另一种是直接override QThread的run函数，这种没有event loop
+
+现在只做一锤子scan应该可以用第二种，在thread里emit向主线程返回结果
+之后要暂停的话可能得用第一种，在event loop里接收暂停消息
+
+2015-04-21 23:27:24
+重载run函数的话，退出程序时可能thread还在运行，不管的话，程序可能报错
+这种方式quit没用(文档里说does nothing if the thread does not have an event loop)
+好像terminate就可以(重载QDialog的done函数，，重载closeEvent会漏掉按esc退出的情况)
+
+2015-04-21 23:39:51
+可以thread scan了，不过用signal/slot的方式汇报扫描过程的话，对于大量文件的情况，会造成GUI假死
+猜测是因为往event loop里塞了太多消息
+也许应该用个队列来处理，可以一次提取多些结果
+
+2015-04-22 09:39:33
+晚上要做下实验看QThread是否也受到GIL的影响
+然后，为避免往event loop里塞入太多message造成GUI假死，同时又不能漏掉任何一个scanned文件，可以在GUI中用idle process来取scanner thread传来的结果
+
+另一种思路是，不用list来展示扫描结果，而是用一个label来展示处理过程，这样就可以略过一部分结果，同时保持GUI的繁忙景象
+
+2015-04-22 16:25:25
+关于hierarchy变动，自己其实并不清楚需求
+可以做这么个实验来concrete:
+自动生成两个tree，然后对其中一个做random operation，包括删除、增加、移动等等
+
+2015-04-23 12:34:50
+之前的commit里搞进了几个几十MB的pickle文件，SO了会儿尝试解决但只是mess up了
+算了新开一个，从这里initial commit
+以后吸取教训就好了
