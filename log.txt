@@ -318,3 +318,146 @@ thread用python的，往queue里放path，，GUI线程里idle时去取出已有�
 
 测试了一下，onIdle每次最多放10个，os.walk Books里的一万多文件，需要一千多次onIdle，11.3秒
 每次处理100个可以降到9.3秒，但是GUI就会开始有些卡
+
+2015-04-23 14:16:04
+下一步，增加暂停/停止功能
+
+2015-04-23 14:47:15
+好像只有操作系统层面开放的api才有权利“从外面”暂停一个thread
+否则只好在thread里检查condition来自我暂停
+external pause也有一些caveats
+比如我们暂停了scan thread，而此时它正执行到往queue里放东西的地方，进入了queue操作的critical section，然后被暂停了
+如果这时候GUI thread没停掉onIdle，去queue.get，就会block
+而scan thread已经被暂停了，put操作(在暂停的情况下)永远不会完成，于是两个线程就lock住了
+
+这里还是先写自我pause吧，，顺带stop也写了(就是检查condition后return就行)
+
+
+恩..先把threading模块的文档过一遍，，写点t.py来熟悉
+
+2015-04-23 14:55:50
+mutex的形象是一把锁，一个thread用它来锁住一组对共享变量的操作，从而保证期间没有其他人能同时操作这些变量(其实是靠约定，约定任何人进入critical section前都要aquire这把锁)
+锁是自己锁上自己开的，意为“这妹子我要用了”和“我用完了，你们谁要用谁用吧”
+
+semaphore的形象是一个箱子，工科男往里放钱绿茶婊往出取
+
+2015-04-23 16:40:02
+nani? python2的文档里Lock没说有locked()方法？——但是确实是有的
+
+2015-04-23 16:47:42
+http://effbot.org/zone/thread-synchronization.htm
+呃，看来semaphore不只是箱子，也可以是妓院
+来一个嫖客，要走一个妹子，再来一个嫖客，又要走一个妹子，，前面的嫖客用完了把妹子还给老鸨，后面的来了再要走
+也可能嫖客一时太多所有妹子都在被用着，新来的嫖客只好等着
+
+2015-04-23 17:14:22
+threading.Condition 一直用 consumer/producer 的例子来讲解
+可以想见它就是结合了 mutex(用于critical section) 和 semaphore(用于notify/wait) 的一个 auxiliary object
+
+2015-04-23 17:46:44
+python threading.py 的源码看不懂，先不看了，反正
+    Lock, Semaphore, Event, Condition
+这几样都明白semantic了
+
+2015-04-23 18:05:09
+http://stackoverflow.com/questions/23285743/when-will-main-thread-exit-in-python
+https://docs.python.org/2/library/threading.html
+(搜 daemon thread)
+python 主线程跑完后，会等其他线程跑完，，这点跟qt不太一样
+文档里说，可以把某个线程设为daemon thread，这样所有非daemon结束后整个程序就结束，剩下的那些daemon会被abruptly shutdown
+
+2015-04-23 18:39:14
+http://stackoverflow.com/questions/7424590/threading-condition-vs-threading-event
+发觉自己还是没搞懂 threading.Condition
+歇歇过后再看吧
+
+2015-04-23 21:07:44
+在研究 threading.Condition，用 consumer/producer 的例子
+下面这么写是错的：
+
+    m = Mutex()
+    s = Semaphore()
+
+    def consumer():
+        while True:
+            m.acquire()
+            if not products.available():
+                s.acquire() # (1)
+            p = products.get()
+            consume(p)
+            m.release()
+
+    def producer():
+        while True:
+            p = produce()
+            m.acquire()
+            products.put(p)
+            m.release()
+            s.release()
+
+假设 consumer 先跑起来，它进了critical section，然后在 (1) 处开始等待producer放东西
+但 producer 根本进不去 critical section，也无从能把生产了的东西放进去
+boom! dead lock
+
+所以 consumer 在 wait 前必须退出 critical section:
+
+    ...
+    if not products.available():
+        m.release()
+        s.acquire() # (1)
+    m.acquire() # (2)
+    p = products.get() # (3)
+    ...
+    
+这么改了之后，一个 producer 对一个 consumer 是没问题了，但如果有多个 consumer 呢？
+(1) 执行之后，也许被别的 consumer 抢了先，把生产出的一个东西已经拿走了
+等到 (2) 得到lock时，其实已经没有东西可拿了
+这时候执行 (3)，boom!
+所以还得改写：
+
+    ...
+    while not products.available():
+        m.release() # (*)
+        s.acquire()
+        m.require() # (1)
+    ...
+
+这样在 (1) 先拿到lock，然后再去while那确认一次
+确认成功的话，just go get it；否则进入循环继续等，而且在 (*) 把lock释放掉
+
+最后多说一个，producer 那里：
+    ...
+    products.put(p)
+    m.release()
+    s.release()
+    ...
+和
+    ...
+    products.put(p)
+    s.release()
+    m.release()
+    ...
+效果上没有区别
+所以 threading.Condition 把 s.release() 等价于 Condition.notify()
+
+这么封装一下，我们就得到了：
+    
+    cv.acquire()
+    while not products.available():
+        cv.wait()
+    p = products.get()
+    cv.release()
+    
+    cv.acquire()
+    products.put(p)
+    cv.notify()
+    cv.release()
+    
+2015-04-23 21:45:29
+呃.. 感觉上面说的一对一到一对多那里的逻辑似乎不怎么正确，s.acquire() 只能有一个 thread 成功
+所以并不会出现 两个线程都认为自己能拿东西，而其实只有一个东西的情况
+哎，不管了先，，线程同步的这些东西感觉必须着手从操作系统的角度写才能最深刻地理解
+现在先凑活用着
+
+呃... 感觉不该凑活，这么基本(/基础)的东西应该弄懂弄清楚
+去wiki synchronization，想办法爬通吧
