@@ -461,3 +461,20 @@ boom! dead lock
 
 呃... 感觉不该凑活，这么基本(/基础)的东西应该弄懂弄清楚
 去wiki synchronization，想办法爬通吧
+
+2015-04-28 21:10:59
+差不多做出 pause/stop 了
+但有一个问题：
+scanner 里头用 os.walk 是很快的，而GUI里把结果append到 QTextEdit 里很慢
+记录了下差距可以到 8004:210，大约是扫描了40个文件只能显示1个结果
+但又不能在 pause/stop 后等显示完，否则GUI看上去还在扫描
+
+这个其实是个UI交互问题了
+想到这么个主意：暂停后在QTextEdit里显示一个可点击的"Show 7684 more results"
+点了之后把appending在queue里的那些结果再放上来
+由于是用户自己的操作，所以不会误以为是点了 pause/stop 后UI无响应
+
+2015-04-28 21:34:13
+想着去SO上问问，更准确的说是，知道SO是stackexchange旗下的，而SE是好多类型问答网站的集合(比如有语言问题、数学问题等等的专门网站)
+找了找找到一个 User Experience，但其实不想问了，本来也不是多重要的问题
+自我感觉可以直接当worker thread就没干那么多活，反正用户应该也不怎么在乎扫描了哪些文件(至少在这个demo中看不出必要性)
