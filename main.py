@@ -1,6 +1,7 @@
 # coding: utf-8
 import Queue
 import time
+import os
 
 from PySide.QtGui import *
 from PySide.QtCore import *
@@ -42,7 +43,7 @@ class Widget(QDialog):
         self.idleTimer.setInterval(0)
         self.idleTimer.timeout.connect(self.onIdle)
 
-        self.openDir(QDir('D:/Books').canonicalPath())
+        self.openDir(QDir('E:/Books').canonicalPath())
 
         self.idleI = 0
         self.totFiles = 0
@@ -53,8 +54,6 @@ class Widget(QDialog):
         if path:
             self.dirEdit.setText(path)
             self.scanButton.setEnabled(True)
-        else:
-            self.scanButton.setEnabled(False)
 
     def scanDir(self):
         self.scanningList.clear()
