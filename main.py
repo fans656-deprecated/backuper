@@ -31,15 +31,10 @@ def layout(root, depth=0):
             return 0
 
     def layout_(root, depth):
-        def offset(root, dx):
-            if root:
-                root.x += dx
-                offset(root.left, dx)
-                offset(root.right, dx)
-
         if root is None:
             return
-        elif root.left is None and root.right is None:
+        root.offset = 0
+        if root.left is None and root.right is None:
             root.x = slots[depth]
             slots[depth] += 1
         else:
@@ -49,12 +44,21 @@ def layout(root, depth=0):
             r = root.right.x if root.right else root.left.x
             root.x = (l + r) / 2.0
             if root.x < slots[depth]:
-                offset(root, slots[depth] - root.x)
+                dx = slots[depth] - root.x
+                root.x += dx
+                root.offset += dx
             slots[depth] = root.x + 1
         root.y = depth
 
+    def offset_(root, dx=0):
+        if root:
+            root.x += dx
+            offset_(root.left, root.offset + dx)
+            offset_(root.right, root.offset + dx)
+
     slots = [0] * depthOf(root)
     layout_(root, depth)
+    offset_(root)
 
 class Widget(QDialog):
 
@@ -167,6 +171,6 @@ layout(root)
 app = QApplication([])
 w = Widget()
 w.resize(480, 480)
-#w.showMaximized()
-w.show()
+w.showMaximized()
+#w.show()
 app.exec_()
