@@ -518,3 +518,6 @@ scanner 里头用 os.walk 是很快的，而GUI里把结果append到 QTextEdit �
 http://billmill.org/pymag-trees/
 看这个tutorial，然后跑去看wiki 的 NP
 艹.. NP还是看不懂，先不看了
+
+2015-04-30 18:53:07
+画树: 实现了 Wetherell-Shannon 算法
