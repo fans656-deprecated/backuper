@@ -1,4 +1,5 @@
 import random
+import string
 
 from PySide.QtGui import *
 from PySide.QtCore import *
@@ -30,12 +31,19 @@ def layout(root, depth=0):
             return 0
 
     def layout_(root, depth):
-        if root:
+        if root is None:
+            return
+        elif root.left is None and root.right is None:
             root.x = slots[depth]
-            root.y = depth
             slots[depth] += 1
+        else:
             layout_(root.left, depth + 1)
             layout_(root.right, depth + 1)
+            l = root.left.x if root.left else root.right.x
+            r = root.right.x if root.right else root.left.x
+            root.x = max((l + r) / 2.0, slots[depth])
+            slots[depth] = root.x + 1
+        root.y = depth
 
     slots = [0] * depthOf(root)
     layout_(root, depth)
@@ -109,13 +117,15 @@ class Widget(QDialog):
         self.getmima(root.right)
 
     def keyPressEvent(self, ev):
+        ch = ev.text()
         if ev.key() == Qt.Key_Escape:
             super(Widget, self).keyPressEvent(ev)
             return
-        global root
-        root = self.randomTree(root, 10)
-        layout(root)
-        self.update()
+        elif ch and ch in string.printable:
+            global root
+            root = self.randomTree(root, 10)
+            layout(root)
+            self.update()
 
     def randomTree(self, root, depth):
         if depth:
@@ -133,10 +143,22 @@ root.right.left = Node()
 root.right.left.left = Node()
 root.right.left.left.left = Node()
 
+#root = Node()
+#root.left = Node()
+#root.left.right = Node()
+#root.left.right.left = Node()
+#root.left.right.right = Node()
+#root.right = Node()
+#root.right.left = Node()
+#root.right.right = Node()
+#root.right.right.left = Node()
+#root.right.right.right = Node()
+
 layout(root)
 
 app = QApplication([])
 w = Widget()
-#w.resize(480, 480)
-w.showMaximized()
+w.resize(480, 480)
+#w.showMaximized()
+w.show()
 app.exec_()
