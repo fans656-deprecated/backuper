@@ -9,17 +9,36 @@ class Node(object):
         self.left = None
         self.right = None
 
-i = 0
+# knuth's inorder algorithm
+#i = 0
+#def layout(root, depth=0):
+#    global i
+#    if root:
+#        if root.left:
+#            layout(root.left, depth + 1)
+#        root.x = i
+#        root.y = depth
+#        i += 1
+#        if root.right:
+#            layout(root.right, depth + 1)
+
 def layout(root, depth=0):
-    global i
-    if root:
-        if root.left:
-            layout(root.left, depth + 1)
-        root.x = i
-        root.y = depth
-        i += 1
-        if root.right:
-            layout(root.right, depth + 1)
+    def depthOf(root):
+        if root:
+            return max(depthOf(root.left), depthOf(root.right)) + 1
+        else:
+            return 0
+
+    def layout_(root, depth):
+        if root:
+            root.x = slots[depth]
+            root.y = depth
+            slots[depth] += 1
+            layout_(root.left, depth + 1)
+            layout_(root.right, depth + 1)
+
+    slots = [0] * depthOf(root)
+    layout_(root, depth)
 
 class Widget(QDialog):
 
@@ -94,7 +113,7 @@ class Widget(QDialog):
             super(Widget, self).keyPressEvent(ev)
             return
         global root
-        root = self.randomTree(root, 20)
+        root = self.randomTree(root, 10)
         layout(root)
         self.update()
 
