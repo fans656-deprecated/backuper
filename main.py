@@ -111,12 +111,17 @@ class Widget(QDialog):
         self.getmima(root.right)
 
     def keyPressEvent(self, ev):
+        global root
         ch = ev.text()
         if ev.key() == Qt.Key_Escape:
             super(Widget, self).keyPressEvent(ev)
             return
+        elif ch == 'j':
+            if root.left and root.right:
+                root.left, root.right = root.right, root.left
+                layout(root)
+                self.update()
         elif ch and ch in string.printable:
-            global root
             root = self.randomTree(root, 10)
             layout(root)
             self.update()
@@ -156,10 +161,15 @@ def show(root, depth=0):
 
 layout(root)
 #show(root)
+print '''
+j - swap left and right sub-tree of root
+esc - quit
+others - random tree
+'''
 
 app = QApplication([])
 w = Widget()
 w.resize(480, 480)
-w.showMaximized()
-#w.show()
+#w.showMaximized()
+w.show()
 app.exec_()
