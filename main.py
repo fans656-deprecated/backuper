@@ -135,23 +135,25 @@ class Widget(QDialog):
                 root.right = self.randomTree(root.right, depth - 1)
             return root
 
-root = Node()
-root.left = Node()
-root.right = Node()
-root.right.left = Node()
-root.right.left.left = Node()
-root.right.left.left.left = Node()
-
 #root = Node()
 #root.left = Node()
-#root.left.right = Node()
-#root.left.right.left = Node()
-#root.left.right.right = Node()
 #root.right = Node()
 #root.right.left = Node()
-#root.right.right = Node()
-#root.right.right.left = Node()
-#root.right.right.right = Node()
+#root.right.left.left = Node()
+#root.right.left.left.left = Node()
+
+root = Node()
+
+root.left = Node()
+root.left.left = Node()
+root.left.left.left = Node()
+root.left.left.right = Node()
+
+root.right = Node()
+root.right.left = Node()
+root.right.right = Node()
+root.right.right.left = Node()
+root.right.right.right = Node()
 
 def show(root, depth=0):
     if root:
