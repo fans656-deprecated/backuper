@@ -10,19 +10,6 @@ class Node(object):
         self.left = None
         self.right = None
 
-# knuth's inorder algorithm
-#i = 0
-#def layout(root, depth=0):
-#    global i
-#    if root:
-#        if root.left:
-#            layout(root.left, depth + 1)
-#        root.x = i
-#        root.y = depth
-#        i += 1
-#        if root.right:
-#            layout(root.right, depth + 1)
-
 def layout(root, depth=0):
     def depthOf(root):
         if root:
@@ -30,35 +17,31 @@ def layout(root, depth=0):
         else:
             return 0
 
-    def layout_(root, depth):
-        if root is None:
-            return
-        root.offset = 0
-        if root.left is None and root.right is None:
-            root.x = slots[depth]
-            slots[depth] += 1
-        else:
-            layout_(root.left, depth + 1)
-            layout_(root.right, depth + 1)
-            l = root.left.x if root.left else root.right.x
-            r = root.right.x if root.right else root.left.x
-            root.x = (l + r) / 2.0
-            if root.x < slots[depth]:
-                dx = slots[depth] - root.x
-                root.x += dx
-                root.offset += dx
-            slots[depth] = root.x + 1
-        root.y = depth
-
-    def offset_(root, dx=0):
+    def setup(root, depth):
         if root:
+            setup(root.left, depth + 1)
+            setup(root.right, depth + 1)
+            root.y = depth
+            if root.left is None and root.right is None:
+                root.x = slots[depth]
+            elif root.left and root.right:
+                root.x = (root.left.x + root.right.x) / 2.0
+            else:
+                root.x = root.left.x if root.left else root.right.x
+            dx = max(slots[depth] - root.x, 0)
             root.x += dx
-            offset_(root.left, root.offset + dx)
-            offset_(root.right, root.offset + dx)
+            root.successorOffset = dx
+            slots[depth] = root.x + 2
+
+    def offset(root, parentOffset):
+        if root:
+            root.x += parentOffset
+            offset(root.left, parentOffset + root.successorOffset)
+            offset(root.right, parentOffset + root.successorOffset)
 
     slots = [0] * depthOf(root)
-    layout_(root, depth)
-    offset_(root)
+    setup(root, depth)
+    offset(root, 0)
 
 class Widget(QDialog):
 
@@ -78,7 +61,6 @@ class Widget(QDialog):
         self.availHeight = self.height() - 2 * margin
 
         self.getmima(root)
-        print self.minX, self.maxX, self.minY, self.maxY
         self.adjust(root)
         self.draw(p, root)
 
@@ -166,7 +148,14 @@ root.right.left.left.left = Node()
 #root.right.right.left = Node()
 #root.right.right.right = Node()
 
+def show(root, depth=0):
+    if root:
+        print '  ' * depth + '{}, {}'.format(root.x, root.y)
+        show(root.left, depth + 1)
+        show(root.right, depth + 1)
+
 layout(root)
+#show(root)
 
 app = QApplication([])
 w = Widget()
