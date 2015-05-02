@@ -544,3 +544,18 @@ http://stackoverflow.com/questions/3042412/with-n-no-of-nodes-how-many-different
 呃，下了 Reingold & Tilford 的论文(Tidier Drawings of Trees)来看，才发现自己找不到WS算法disfigured tree的原因是... 自己没严格按这个算法来画
 它的原意是，左子树画在左边，右子树画在右边
 而我是把只有一边子树的情况，处理成父节点跟子节点x对齐了
+
+2015-05-02 20:03:21
+http://stackoverflow.com/questions/23273352/steps-to-draw-a-dfa-or-nfa-from-a-simple-statement
+LaTex 有个 TikZ package 可以画 graph
+
+http://en.wikipedia.org/wiki/Graph_drawing
+瞥了一眼 graph drawing，尼玛... 简直是个领域
+
+2015-05-02 20:16:36
+其实要画 NFA DFA 的话可能不需要多复杂的算法，画成一个圆都可以
+所以到时候再说
+
+2015-05-02 21:17:24
+想自己写contour，写乱了，画不出来
+哎，累了，不写了先

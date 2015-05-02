@@ -1,48 +1,66 @@
 import random
 import string
+from operator import gt, lt
 
 from PySide.QtGui import *
 from PySide.QtCore import *
 
 class Node(object):
 
+    index = 0
+
     def __init__(self):
         self.left = None
         self.right = None
+        self.index = Node.index
+        Node.index += 1
 
-def layout(root, depth=0):
-    def depthOf(root):
-        if root:
-            return max(depthOf(root.left), depthOf(root.right)) + 1
-        else:
-            return 0
-
+def layout(root):
     def setup(root, depth):
-        if root:
+        def push(left, right):
+            def contour(root, comp, cur=[]):
+                if root:
+                    if not cur:
+                        cur = [root.x]
+                    if comp(root.x, cur[0]):
+                        cur[0] = root.x
+                    l = contour(root.left, comp, cur)
+                    r = contour(root.right, comp, cur)
+                    cur[0] = l if comp(l, r) else r
+                return cur[0]
+
+            l = contour(left, gt)
+            r = contour(right, lt)
+            dx = max(l - r + 1, 0)
+            print '{} contour: {} {}, dx: {}'.format(root.index, l, r, dx)
+            right.x += dx
+            right.offset = dx
+
+        if not root:
+            return
+        root.offset = 0
+        if not root.left and not root.right:
+            root.x = 0
+        else:
             setup(root.left, depth + 1)
             setup(root.right, depth + 1)
-            root.y = depth
-            if root.left is None and root.right is None:
-                root.x = slots[depth]
-            elif root.left and root.right:
+            if root.left and root.right:
+                push(root.left, root.right)
                 root.x = (root.left.x + root.right.x) / 2.0
             elif root.left:
                 root.x = root.left.x + 1
             elif root.right:
                 root.x = root.right.x - 1
-            dx = max(slots[depth] - root.x, 0)
-            root.x += dx
-            root.successorOffset = dx
-            slots[depth] = root.x + 2
+        root.y = depth
 
-    def offset(root, parentOffset):
+    def offset(root, dx):
         if root:
-            root.x += parentOffset
-            offset(root.left, parentOffset + root.successorOffset)
-            offset(root.right, parentOffset + root.successorOffset)
+            print 'offset {}: {}'.format(root.index, dx)
+            root.x += dx
+            offset(root.left, dx + root.offset)
+            offset(root.right, dx + root.offset)
 
-    slots = [0] * depthOf(root)
-    setup(root, depth)
+    setup(root, 0)
     offset(root, 0)
 
 class Widget(QDialog):
@@ -76,9 +94,9 @@ class Widget(QDialog):
         if root.right:
             p.drawLine(pt, QPointF(root.right.x, root.right.y))
         # draw nodes
-        radius = self.width() / 80.0
-        radius = 2
+        radius = self.width() / 40.0
         p.drawEllipse(pt, radius, radius)
+        p.drawText(pt, str(root.index))
         self.draw(p, root.left)
         self.draw(p, root.right)
 
@@ -124,7 +142,7 @@ class Widget(QDialog):
                 layout(root)
                 self.update()
         elif ch and ch in string.printable:
-            root = self.randomTree(root, 10)
+            root = self.randomTree(root, 5)
             layout(root)
             self.update()
 
@@ -147,10 +165,12 @@ class Widget(QDialog):
 root = Node()
 
 root.left = Node()
+root.left.left = Node()
 root.left.right = Node()
 root.left.right.right = Node()
-root.left.right.right.right = Node()
 root.right = Node()
+root.right.left = Node()
+root.right.left.left = Node()
 
 def show(root, depth=0):
     if root:
