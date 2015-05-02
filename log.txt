@@ -521,3 +521,21 @@ http://billmill.org/pymag-trees/
 
 2015-04-30 18:53:07
 画树: 实现了 Wetherell-Shannon 算法
+
+2015-05-01 21:18:22
+呃，之前没记下这个地址：
+    http://billmill.org/pymag-trees/
+是目前做的工作所based on的
+
+2015-05-02 17:44:37
+想找找那种情况会造成 Wetherell-Shannon 算法画出 disfigured tree
+
+2015-05-02 18:02:40
+http://stackoverflow.com/questions/3042412/with-n-no-of-nodes-how-many-different-binary-and-binary-search-trees-possib
+...感觉比较难..先不看了
+
+可以直接创建这些树
+
+2015-05-02 18:32:50
+5层二叉树交换root的左右子树，遍历了好多也没看出区别
+尼玛...

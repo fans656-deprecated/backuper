@@ -4,6 +4,12 @@ import string
 from PySide.QtGui import *
 from PySide.QtCore import *
 
+print '''
+j - swap left and right sub-tree of root
+esc - quit
+others - random tree
+'''
+
 class Node(object):
 
     def __init__(self):
@@ -122,8 +128,16 @@ class Widget(QDialog):
                 layout(root)
                 self.update()
         elif ch and ch in string.printable:
-            root = self.randomTree(root, 10)
+            global roots
+            #root = self.randomTree(root, 10)
+            try:
+                root = roots.next()
+            except StopIteration:
+                print 'new iteration'
+                roots = allBinaryTreeOfDepth(nDepth)
+                root = roots.next()
             layout(root)
+            #show(root)
             self.update()
 
     def randomTree(self, root, depth):
@@ -155,19 +169,40 @@ root.right.right = Node()
 root.right.right.left = Node()
 root.right.right.right = Node()
 
+def allBinaryTreeOfDepth(depth):
+    def copy(root):
+        if root:
+            nroot = Node()
+            nroot.left = copy(root.left)
+            nroot.right = copy(root.right)
+            return nroot
+
+    if depth == 1:
+        yield Node()
+    else:
+        for left in allBinaryTreeOfDepth(depth - 1):
+            root = Node()
+            root.left = left
+            yield copy(root)
+            for right in allBinaryTreeOfDepth(depth - 1):
+                root.right = right
+                yield copy(root)
+
 def show(root, depth=0):
     if root:
-        print '  ' * depth + '{}, {}'.format(root.x, root.y)
+        #print '  ' * depth + '{}, {}'.format(root.x, root.y)
+        print '  ' * depth + '*'
         show(root.left, depth + 1)
         show(root.right, depth + 1)
+    else:
+        print '  ' * depth + '-'
+
+nDepth = 4
+roots = allBinaryTreeOfDepth(nDepth)
+root = roots.next()
 
 layout(root)
 #show(root)
-print '''
-j - swap left and right sub-tree of root
-esc - quit
-others - random tree
-'''
 
 app = QApplication([])
 w = Widget()
