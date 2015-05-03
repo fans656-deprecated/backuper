@@ -15,6 +15,11 @@ class Tree(object):
         for child in self.children:
             child.show(depth + 1, showFunc)
 
+    def clone(self):
+        root = self
+        root.children = [c.clone() if c else c for c in self.children]
+        return root
+
 class BinaryTree(Tree):
 
     def __init__(self, data='*'):
@@ -91,3 +96,11 @@ class BinaryTree(Tree):
             if i == 0:
                 root = parent
         return root
+
+trees = [
+        BinaryTree.random(),
+        BinaryTree.make('1<2'),
+        BinaryTree.make('1<2 1>3 3<4 4<5 5<6'),
+        BinaryTree.make('1<2 1>3'),
+        BinaryTree.make('1<2 1>3 2<4 2>5 3<6 3>7'),
+        ]

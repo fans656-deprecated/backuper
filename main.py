@@ -1,28 +1,23 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
 
-from tree import BinaryTree
-from layout import layout
+from tree import BinaryTree, trees
+from layout import layouts
 
 print '''
-j - random tree
+j - next tree
+k - prev tree
+l - next layout
+p - prev layout
 '''
 
-def randomTree():
-    global tree
-    tree = BinaryTree.random(5)
-    #tree = BinaryTree(1)
-    #tree.left = BinaryTree(2)
-    #tree.left.left = BinaryTree(4)
-    #tree.right = BinaryTree(3)
-    layout(tree)
-    #tree.show(showFunc=lambda t: '{} {}'.format(t.x, t.y) if t else '-')
-
-tree = BinaryTree.make('1<2 1>3 3<4 4<5 5<6')
-layout(tree)
-#randomTree()
-
 class Widget(QDialog):
+
+    def __init__(self, parent=None):
+        super(Widget, self).__init__(parent)
+        self.treeIndex = 0
+        self.layoutIndex = 0
+        self.init()
 
     def paintEvent(self, ev):
 
@@ -54,19 +49,58 @@ class Widget(QDialog):
         availWidth = self.width() - margin * 2
         availHeight = self.height() - margin * 2
         radius = side / 40.0
-        minX, maxX = getMima(tree, 'x')
-        minY, maxY = getMima(tree, 'y')
+        minX, maxX = getMima(self.tree, 'x')
+        minY, maxY = getMima(self.tree, 'y')
         dx, dy = float(maxX - minX), float(maxY - minY)
 
-        draw(painter, tree)
+        draw(painter, self.tree)
 
     def keyPressEvent(self, ev):
         ch = ev.text()
         if ch == 'j':
-            randomTree()
-            self.update()
-            return
-        super(Widget, self).keyPressEvent(ev)
+            self.tree = self.nextTree()
+        elif ch == 'k':
+            self.tree = self.prevTree()
+        elif ch == 'h':
+            self.layout = self.prevLayout()
+        elif ch == 'l':
+            self.layout = self.nextLayout()
+        else:
+            super(Widget, self).keyPressEvent(ev)
+        self.init()
+
+    def init(self):
+        self.tree = self.curTree()
+        self.layout = self.curLayout()
+        self.layout(self.tree)
+        self.update()
+        self.setWindowTitle('{} {}/{}'.format(
+            self.layout.func_name,
+            self.treeIndex + 1,
+            len(trees)))
+
+    def nextTree(self):
+        self.treeIndex = (self.treeIndex + 1) % len(trees)
+        return self.curTree()
+
+    def prevTree(self):
+        self.treeIndex = (self.treeIndex - 1 + len(trees)) % len(trees)
+        return self.curTree()
+
+    def curTree(self):
+        return trees[self.treeIndex].clone()
+
+    def nextLayout(self):
+        self.layoutIndex = (self.layoutIndex + 1) % len(layouts)
+        return self.curLayout()
+
+    def prevLayout(self):
+        self.layoutIndex = (self.layoutIndex - 1 + len(layouts)) % len(layouts)
+        return self.curLayout()
+
+    def curLayout(self):
+        layout = layouts[self.layoutIndex]
+        return layout
 
 app = QApplication([])
 w = Widget()
