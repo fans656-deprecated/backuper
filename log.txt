@@ -568,3 +568,9 @@ http://billmill.org/pymag-trees/
 在 paintEvent 里写函数，然后直接在函数里用 paintEvent 中的 painter
 会导致 closure 然后，结束程序时报错说 can't destroy paint device while painting
 改成把painter传参进去就好了
+
+2015-05-03 22:05:51
+knuth algorithm 用 itertools.count() 做一个默认参数，可以省去
+    slot=[0]
+    slot[0] += 1
+等等不漂亮的写法
