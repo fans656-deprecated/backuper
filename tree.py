@@ -1,4 +1,5 @@
 import random
+import re
 
 class Tree(object):
 
@@ -70,3 +71,23 @@ class BinaryTree(Tree):
             return root
 
         return randomByDepth(depth)
+
+    @staticmethod
+    def make(s):
+        def getNode(key):
+            if key not in nodes:
+                nodes[key] = BinaryTree(key)
+            return nodes[key]
+
+        nodes = {}
+        for i, rel in enumerate(s.split()):
+            parent, direction, child = re.match(r'(\d+)([<>])(\d+)', rel).groups()
+            parent = getNode(parent)
+            child = getNode(child)
+            if direction == '<':
+                parent.left = child
+            else:
+                parent.right = child
+            if i == 0:
+                root = parent
+        return root

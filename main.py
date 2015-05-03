@@ -18,8 +18,9 @@ def randomTree():
     layout(tree)
     #tree.show(showFunc=lambda t: '{} {}'.format(t.x, t.y) if t else '-')
 
-tree = None
-randomTree()
+tree = BinaryTree.make('1<2 1>3 3<4 4<5 5<6')
+layout(tree)
+#randomTree()
 
 class Widget(QDialog):
 

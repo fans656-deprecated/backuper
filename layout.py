@@ -1,18 +1,7 @@
-def layout(root, depth=0, slots=None):
-
-    def depthOf(root):
-        if root:
-            if len(root.children):
-                return max(depthOf(c) for c in root.children) + 1
-            return 1
-        else:
-            return 0
-
-    if slots is None:
-        slots = [0] * depthOf(root)
-    root.y = depth
-    root.x = slots[depth]
-    slots[depth] += 1
-    for c in root.children:
-        if c:
-            layout(c, depth + 1, slots)
+def layout(root, depth=0, slot=[0]):
+    if root:
+        layout(root.left, depth + 1, slot)
+        root.x = slot[0]
+        root.y = depth
+        slot[0] += 1
+        layout(root.right, depth + 1, slot)
