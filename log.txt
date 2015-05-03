@@ -559,3 +559,12 @@ http://en.wikipedia.org/wiki/Graph_drawing
 2015-05-02 21:17:24
 想自己写contour，写乱了，画不出来
 哎，累了，不写了先
+
+2015-05-03 15:32:16
+http://billmill.org/pymag-trees/
+想重头看这个，过程中每一步都走扎实点，代码写整洁点
+
+2015-05-03 17:06:35
+在 paintEvent 里写函数，然后直接在函数里用 paintEvent 中的 painter
+会导致 closure 然后，结束程序时报错说 can't destroy paint device while painting
+改成把painter传参进去就好了
