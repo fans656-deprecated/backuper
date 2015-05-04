@@ -9,6 +9,7 @@ j - next tree
 k - prev tree
 l - next layout
 p - prev layout
+r - random tree
 '''
 
 class Widget(QDialog):
@@ -65,6 +66,9 @@ class Widget(QDialog):
             self.layout = self.prevLayout()
         elif ch == 'l':
             self.layout = self.nextLayout()
+        elif ch == 'r':
+            trees[self.treeIndex] = BinaryTree.random()
+            self.tree = self.curTree()
         else:
             super(Widget, self).keyPressEvent(ev)
         self.init()
