@@ -40,6 +40,8 @@ class Widget(QDialog):
                 if child:
                     draw(painter, child, pt)
             painter.drawEllipse(pt, radius, radius)
+            if root:
+                painter.drawText(pt, str(root.data))
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
