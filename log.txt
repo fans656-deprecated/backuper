@@ -574,3 +574,7 @@ knuth algorithm 用 itertools.count() 做一个默认参数，可以省去
     slot=[0]
     slot[0] += 1
 等等不漂亮的写法
+
+2015-05-04 17:59:46
+数据结构里学的用queue的层序遍历其实没法区分当前q.get到的是哪一层的元素
+因为返回的只是node的list
