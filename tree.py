@@ -99,6 +99,12 @@ class BinaryTree(Tree):
 
 trees = [
         #BinaryTree.random(),
+        BinaryTree.make('1<2 1>3 2<4 4<5 4>6 3<7 3>8 8<9 8>10'), # figure 2 rooted
+        BinaryTree.make('1<2 1>3 3<4 4<5 5<6'), # figure 2
+        BinaryTree.make('1<2 1>3 2>4 4>5 5>6'), # figure 2 mirror
+        BinaryTree.make('1<2 2<3 2>4'), # fig 6-1
+        BinaryTree.make('1>2 2<3 2>4'), # fig 6-1'
+        BinaryTree.make('1<2 1>3 3<4 3>5'), # fig 6-2
         BinaryTree.make('1<2 1>3 2<4 2>5 5<6 6<7 5>8 8<9 8>10 3>11 11<12 12<13 12>14'), # wrong?
         BinaryTree.make('1<2 1>3 2<4 2>5 3<6 3>7'), # 3-level full
         BinaryTree.make('1<2 2>3 1>4 4<5'), # diamond
@@ -107,8 +113,6 @@ trees = [
         BinaryTree.make('1<2 1>3'), # 2-level full
         BinaryTree.make('1<2'), # left sub
         BinaryTree.make('1>2'), # right sub
-        BinaryTree.make('1<2 1>3 3<4 4<5 5<6'), # figure 2
-        BinaryTree.make('1<2 1>3 2>4 4>5 5>6'), # figure 2 mirror
         BinaryTree.make('1<2 1>3 3>4'),
         BinaryTree.make('1<2 1>3 3<4 3>5'),
         BinaryTree.make('1<2 1>3 3<4'),

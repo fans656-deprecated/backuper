@@ -93,6 +93,7 @@ def contourLayout(root, depth=0):
             rl, rr = setup(root.right, depth + 1)
             if root.left and root.right:
                 dx = max(l - r for l, r in zip(lr, rl)) + 1
+                # TODO: how to make the first case more nicely?
                 if dx > 0:
                     root.right.offset += dx
                     root.right.x += dx
