@@ -31,8 +31,8 @@ class Widget(QDialog):
             return min((prop,) + mis), max((prop,) + mas)
 
         def draw(painter, root, parentPt=None):
-            x = margin + availWidth * ((root.x - minX) / dx if dx else 0.5)
-            y = margin + availHeight * ((root.y - minY) / dy if dy else 0.5)
+            x = margin + availWidth * ((root.x - minX) / float(dx) if dx else 0.5)
+            y = margin + availHeight * ((root.y - minY) / float(dy) if dy else 0.5)
             pt = QPointF(x, y)
             if parentPt:
                 painter.drawLine(parentPt, pt)
@@ -40,18 +40,19 @@ class Widget(QDialog):
                 if child:
                     draw(painter, child, pt)
             painter.drawEllipse(pt, radius, radius)
-            if root:
-                painter.drawText(pt, str(root.data))
+            #if root:
+            #    painter.drawText(pt, str(root.data))
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(QBrush(QColor(255,255,255)))
 
         side = min(self.width(), self.height())
-        margin = side / 10.0
+        margin = side / 20.0
         availWidth = self.width() - margin * 2
         availHeight = self.height() - margin * 2
         radius = side / 40.0
+        radius = 2
         minX, maxX = getMima(self.tree, 'x')
         minY, maxY = getMima(self.tree, 'y')
         dx, dy = float(maxX - minX), float(maxY - minY)
@@ -112,4 +113,5 @@ app = QApplication([])
 w = Widget()
 w.resize(480, 480)
 w.show()
+#w.showMaximized()
 app.exec_()

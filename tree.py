@@ -55,7 +55,7 @@ class BinaryTree(Tree):
             self.right.show(depth + 1, showFunc)
 
     @staticmethod
-    def random(depth=5, probability=5):
+    def random(depth=8, probability=8):
         def randomByDepth(depth):
             root = BinaryTree()
             if depth > 1:
@@ -99,18 +99,20 @@ class BinaryTree(Tree):
 
 trees = [
         #BinaryTree.random(),
-        BinaryTree.make('1<2 1>3 2<4 2>5 3<6 3>7'),
-        BinaryTree.make('1<2 1>3'),
-        BinaryTree.make('1<2'),
         BinaryTree.make('1<2 1>3 2<4 2>5 5<6 6<7 5>8 8<9 8>10 3>11 11<12 12<13 12>14'), # wrong?
+        BinaryTree.make('1<2 1>3 2<4 2>5 3<6 3>7'), # 3-level full
+        BinaryTree.make('1<2 2>3 1>4 4<5'), # diamond
         BinaryTree.make('1<2 1>3 3<4 3>5 4<6 6>7 5<8 5>9 9<10 10<11 11>12 9>13 13<14 14>15 13>16 16<17'), # Tidier.. fig 5
+        BinaryTree.make('1<2 1>3 2>4 4<5 4>6 3<7 3>8 8<9 8>10'), # figure 4
+        BinaryTree.make('1<2 1>3'), # 2-level full
+        BinaryTree.make('1<2'), # left sub
+        BinaryTree.make('1>2'), # right sub
         BinaryTree.make('1<2 1>3 3<4 4<5 5<6'), # figure 2
         BinaryTree.make('1<2 1>3 2>4 4>5 5>6'), # figure 2 mirror
-        BinaryTree.make('1<2 2>3 1>4 4<5'),
-        BinaryTree.make('1<2 1>3 2>4 4<5 4>6 3<7 3>8 8<9 8>10'), # figure 4
         BinaryTree.make('1<2 1>3 3>4'),
         BinaryTree.make('1<2 1>3 3<4 3>5'),
         BinaryTree.make('1<2 1>3 3<4'),
+        BinaryTree.make('1<2 1>3 2<4 3>5 5<6'),
         ]
 
 if __name__ == '__main__':

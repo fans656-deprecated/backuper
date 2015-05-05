@@ -85,19 +85,18 @@ def wsCentered(root, depth=0):
     offset(root)
 
 def contourLayout(root, depth=0):
-    def setup(root, depth, comp=gt):
-        def better(a, b):
-            return a if comp(a, b) else b
-
+    def setup(root, depth):
         if root:
-            root.y = depth
             root.offset = 0
-            llc, lrc = setup(root.left, depth + 1, gt)
-            rlc, rrc = setup(root.right, depth + 1, lt)
+            root.y = depth
+            ll, lr = setup(root.left, depth + 1)
+            rl, rr = setup(root.right, depth + 1)
             if root.left and root.right:
-                dx = max(l - r for l, r in zip(lrc, rlc)) + 1
-                root.right.x += dx
-                root.right.offset += dx
+                dx = max(l - r for l, r in zip(lr, rl)) + 1
+                if dx > 0:
+                    root.right.offset += dx
+                    root.right.x += dx
+                    rr = [t + dx for t in rr]
                 root.x = (root.left.x + root.right.x) / 2.0
             elif root.left:
                 root.x = root.left.x + 1
@@ -105,9 +104,9 @@ def contourLayout(root, depth=0):
                 root.x = root.right.x - 1
             else:
                 root.x = 0
-            lc, rc = [root.x] + llc, [root.x] + rrc
-            print root.data, lc, rc
-            return lc, rc
+            ll = [root.x] + ll + rl[len(ll):]
+            rr = [root.x] + rr + lr[len(rr):]
+            return ll, rr
         else:
             return [], []
 

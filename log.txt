@@ -614,3 +614,15 @@ wsCentered 中slots加2的话可以保证正常情况下sibling节点间距离�
 
 2015-05-04 22:39:56
 改不对.. 明儿继续吧
+
+2015-05-05 19:35:27
+改对了，有两个原因，一是右子树推出去后要更新它的contour，二是只有单边子树时，返回的left/right contour要对称(比如只有左子树时，计算右子树返回的contour为空，但返回给caller时要用左子树的right contour)
+
+等等，还是有错
+没有考虑到左子树在下头伸展到右子树右边的情况(反之类似)
+也就是说，right contour != rsub.right contour
+
+2015-05-05 20:24:38
+ok了，left contour = ll + 多出来的rl(可能为空)
+这样只有一边子树的情况也包含进去了
+复杂度大概是 O(nlgn)
