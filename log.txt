@@ -631,3 +631,28 @@ ok了，left contour = ll + 多出来的rl(可能为空)
 http://en.wikipedia.org/wiki/Everything_(software)
 everthing利用NTFS的MFT来快速建立index，然后利用journal来维护
 这里有两个别的开源软件利用了同样的技术
+
+2015-05-06 17:59:18
+开一个branch来写NTFS MFT
+
+2015-05-06 18:04:15
+http://security.stackexchange.com/questions/36445/how-can-i-view-the-ntfs-mft-using-correct-field-names
+这个答案里有：
+    1. python解析NTFS MFT的代码
+    2. NTFS MFT 的论文
+
+2015-05-06 18:35:48
+我靠，直接用 open(r'\\.\PhysicalDrive0', 'rb') 就能打开磁盘
+r'\\.\C:' 这种是打开volume?
+
+https://github.com/jeffbryner/pyMFTGrabber
+https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
+搜"physical disks"有真相——呃，说明了 "\\.\" 的用法
+
+2015-05-06 18:46:52
+http://superuser.com/questions/529167/why-dont-file-managers-use-the-master-file-table-for-instant-search-results
+Why don't file managers use the Master File Table for instant search results?
+
+2015-05-06 21:21:42
+http://code.activestate.com/recipes/142812-hex-dumper/
+hex dump
