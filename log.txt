@@ -664,3 +664,13 @@ http://en.wikipedia.org/wiki/Data_cluster
 http://en.wikipedia.org/wiki/Kibibyte
 KB vs KiB
 size & size on disk (cluster)
+
+2015-05-07 18:44:28
+http://stackoverflow.com/questions/444591/convert-a-string-of-bytes-into-an-int-python
+struct.unpack('<L', s)[0]
+
+2015-05-07 19:05:08
+哈哈，hexdump 出 ntfs 的 partition boot sector 了
+哦对了mark一下：一路跟着 "NTFS forensics.pdf" 走的
+
+http://en.wikipedia.org/wiki/NTFS#Partition_Boot_Sector
