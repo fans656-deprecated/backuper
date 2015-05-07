@@ -656,3 +656,11 @@ Why don't file managers use the Master File Table for instant search results?
 2015-05-06 21:21:42
 http://code.activestate.com/recipes/142812-hex-dumper/
 hex dump
+
+2015-05-07 17:13:45
+http://superuser.com/questions/704218/why-is-there-such-a-big-difference-between-size-and-size-on-disk
+http://en.wikipedia.org/wiki/Data_cluster
+
+http://en.wikipedia.org/wiki/Kibibyte
+KB vs KiB
+size & size on disk (cluster)
