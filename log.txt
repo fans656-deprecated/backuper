@@ -674,3 +674,12 @@ struct.unpack('<L', s)[0]
 哦对了mark一下：一路跟着 "NTFS forensics.pdf" 走的
 
 http://en.wikipedia.org/wiki/NTFS#Partition_Boot_Sector
+
+2015-05-15 20:30:34
+[stack]
+    2015-05-06 12:34:18
+        http://en.wikipedia.org/wiki/Everything_(software)
+        NTFS MFT
+
+    2015-04-30 11:31:44
+        tree drawing algorithm (of backuper)
