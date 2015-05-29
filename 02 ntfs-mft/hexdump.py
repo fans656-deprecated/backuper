@@ -10,10 +10,9 @@
 #        print '{:010X}: {:48}  {:16}'.format(i * 16, a, b)
 
 def group(a, *ns):
-    r = a
     for n in ns:
-        r = [r[i:i+n] for i in xrange(0, len(r), n)]
-    return r
+        a = [a[i:i+n] for i in xrange(0, len(a), n)]
+    return a
 
 def join(a, *cs):
     return [cs[0].join(join(t, *cs[1:])) for t in a] if cs else a
