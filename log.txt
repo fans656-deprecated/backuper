@@ -683,3 +683,116 @@ http://en.wikipedia.org/wiki/NTFS#Partition_Boot_Sector
 
     2015-04-30 11:31:44
         tree drawing algorithm (of backuper)
+
+2015-05-29 21:54:13
+http://www.howtogeek.com/184659/beginner-geek-hard-disk-partitions-explained/
+在想为什么要有 partition —— C: D: ...
+一个可能的比喻是，disk 本身只是一个房间，要当仓库用的话，必须在里头摆上货架
+你可以用一个超大的货架占满整个房间，也可以用几个货架
+货架有不同的品牌，比如 FAT32，NTFS，，用起来性能、安全性啥的也不一样
+
+http://en.wikipedia.org/wiki/Disk_partitioning
+这里说 hdd 的 partition 是靠 cylinder 来 delimit 的，怪不得想分 say, 1024MB 的时候不一定能分准确，些许一个 cylinder 就是 80MB 呢对吧
+
+http://en.wikipedia.org/wiki/Master_boot_record#PTE
+partition table entry 中最后四个字节是 number of sectors in partition
+如果一个 sector 按512字节算的话，一个 partition 的最大容量就是
+    2^32 * 2^9 B == 2^41 B == 2^11 GiB == 2 Tib
+如果一个 sector 4096 字节的话 (4K)，好像自己的这个电脑就是的
+    2^32 * 2^12 B == 2^44 B == 16 Tib
+    
+    
+记得为啥文件从D盘 *MOVE* 到E盘要吱吱吱响很久么？因为真的是数据里的0啊1啊的被挪到了不同的扇区
+而如果只是E盘里一个文件夹移到另一个文件夹，只要在这个 partition 的 bookkeeping 里改一下 path 字符串就好了，实际文件内容还是在那几个扇区
+
+恩，partition 还有一个重要的属性就是 bookkeeping，里头写着类似这样的东西：
+    D:/App/a.exe         -->  sector 1000 till sector 1084
+    E:/Movies/AV/foo.rm  -->  sector 1085 till sector 2133
+    E:/Movies/AV/bar.jpg -->  sector 996  till sector 996
+    
+
+对了，不同的分区还可以设置不同的 sector size
+可以创建一个“小文件”分区，扇区大小64字节
+创建一个“大文件”分区，扇区大小1MB
+
+2015-05-29 22:59:42
+http://en.wikipedia.org/wiki/Partition_type
+只靠 PTE (partion table entry) 的 file type 字节 (偏移量 0x04)并不能判断一个分区是否一定是 NTFS
+file type 取值 0x07 的除了 NTFS 还有 OS/2 的 IFS, HPFS 什么的
+即使不考虑这些，只在 windows 上，也会出现取值 0x42 代表 dynamic extended partition —— 自己目前的 HDD 只划一个 E 盘就是这种类型，但它确实是 NTFS 的 (而取值并非 0x07)
+
+哦，对了，还有 0x0f 代表的 extended paritition
+
+2015-05-29 23:11:15
+http://en.wikipedia.org/wiki/Drive_letter_assignment
+linux 的文件 namespace 是棵树，这样 /foo/bar
+windows 的是个森林，C:/foo D:/bar E:/baz
+
+
+为啥 primary partition 最多只能有 4 个呢？——因为MBR只留了 16 * 4 = 64 字节给 partition table entries
+所以用 extended partition 来把更多分区信息指向到 extended boot record 里 (可以有多个，不像MBR只有一个)
+
+http://en.wikipedia.org/wiki/Extended_boot_record
+EBR 创造的 logical partition 构成一个 linked list
+
+EBR 的结构类似 MBR，前446个字节(0~445)一般没用(你看咱们以前logical partition 的 D: E: F: 都不作 bootable partition 的嘛~)
+
+EBR 里第二个 parition table entry 里的 LBA 指向后一个 EBR，如果没有后一个，就置零
+
+2015-05-29 23:31:31
+mark 一下
+SDD:
+    00000001B0: 65 6D 00 00 00 63 7B 9A  C5 A2 83 62 00 00 80 20
+    00000001C0: 21 00 07 FE FF FF 00 08  00 00 00 00 40 06 00 FE
+    00000001D0: FF FF 07 FE FF FF 00 08  40 06 00 A8 A7 08 00 00
+    00000001E0: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+    00000001F0: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 55 AA
+HDD:
+    00000001B0: 65 6D 00 00 00 63 7B 9A  E0 A2 4A 62 00 00 00 01
+    00000001C0: 01 00 42 FE FF FF 3F 00  00 00 F1 57 38 3A 00 00
+    00000001D0: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+    00000001E0: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+    00000001F0: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 55 AA
+
+可以看到，SDD有两个NTFS分区 (offset 1c2: 0x07, offset 1d2: 0x07)
+HDD有一个 dynamic 分区 (offset 1c2: 0x42)
+bootable 是 sdd 的第一个分区 (0x80)
+
+2015-05-29 23:44:04
+http://stackoverflow.com/questions/9465451/how-can-i-determine-the-sector-size-in-windows
+可以用 fsutil 来查看 sector size
+
+2015-05-30 00:06:52
+http://superuser.com/questions/679725/how-to-correct-512-byte-sector-mbr-on-a-4096-byte-sector-disk
+MBR 里头只说了某个 partition 在哪个 sector 开始，但没说 sector size
+所以，当我们要 seek 到那个 partition 的 first sector 时，应该用哪种 sector size (512/4096)?
+
+http://stackoverflow.com/a/13533141/3881776
+需要与操作系统识别的 sector size 一致
+这里说 win8 能使用 4K sector，win7只能使用 512B sector
+
+2015-05-30 00:20:26
+http://stackoverflow.com/questions/751157/programatically-determining-file-size-on-disk-in-advance
+让操作系统来汇报 sector size
+
+http://stackoverflow.com/questions/8106628/can-i-determine-os-installed-in-hard-disk-using-sectors-level-data
+http://stackoverflow.com/questions/2702853/direct-access-to-harddrive
+ultimate answer
+DeviceIoControl() IOCTL_DISK_GET_DRIVE_GEOMETRY
+
+http://stackoverflow.com/questions/2493172/determine-cluster-size-of-file-system-in-python
+GetDiskFreeSpace 也行
+
+2015-05-30 22:51:26
+http://timgolden.me.uk/pywin32-docs/win32file__DeviceIoControl_meth.html
+win32file.DeviceIOControl
+
+http://www.math.uiuc.edu/~gfrancis/illimath/windows/aszgard_mini/movpy-2.0.0-py2.4.4/movpy/lib/win32/lib/winioctlcon.py
+winioctlcon.IOCTL_DISK_GET_DRIVE_GEOMETRY
+
+https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx
+DeviceIoControl function
+
+http://docs.activestate.com/activepython/2.5/pywin32/win32file__CreateFile_meth.html
+http://bbs.csdn.net/topics/360018085?page=1#post-361761060
+win32file.CreateFile

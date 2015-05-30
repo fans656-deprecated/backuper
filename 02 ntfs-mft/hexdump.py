@@ -1,14 +1,3 @@
-#def hexdump(data):
-#    groupJoin = lambda ch, size, a: [ch.join(a[i:i+size])
-#            for i in range(0, len(a), size)]
-#    make = lambda c1, c2, a: groupJoin(c1, 2, groupJoin(c2, 8, a))
-#    hs = ['{:02X}'.format(ord(c)) for c in data]
-#    cs = [c if 0x20 <= ord(c) < 0x7f else '.' for c in data]
-#    hs = make('  ', ' ', hs)
-#    cs = make(' ', '', cs)
-#    for i, (a, b) in enumerate(zip(hs, cs)):
-#        print '{:010X}: {:48}  {:16}'.format(i * 16, a, b)
-
 def group(a, *ns):
     for n in ns:
         a = [a[i:i+n] for i in xrange(0, len(a), n)]

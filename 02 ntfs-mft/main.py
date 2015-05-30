@@ -1,9 +1,12 @@
+from pprint import pprint
+
+from drive import *
 from hexdump import hexdump
 
-try:
-    f = open(r'\\.\PhysicalDrive0', 'rb')
-    s = f.read(512)
-    hexdump(s)
-    f.close()
-except IOError as e:
-    print dir(e)
+drives = getPhysicalDrivePaths()
+path = drives[0]
+with open(path, 'rb') as f:
+    sectorSize = getDiskSectorSize(path)
+    mbr = f.read(512)
+    hexdump(mbr)
+    print 'Sector size: {}'.format(sectorSize)
